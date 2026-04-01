@@ -1,0 +1,2 @@
+node_modules/
+# dist/ is intentionally committed so git-based installs work without a build step
