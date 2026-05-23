@@ -64,6 +64,11 @@ export type SkewMetricName =
   | 'atm_iv'
   | 'expected_move_pct'
   | 'expected_move_vs_atr_ratio'
+  // Surface-distortion metrics added in Phase 2
+  | 'smile_curvature'
+  | 'call_wing_curvature'   // ≡ call_10_25_slope; benchmarked separately for clarity
+  | 'put_wing_curvature'    // ≡ put_10_25_slope
+  | 'skew_asymmetry'
 
 export const SKEW_METRIC_NAMES: SkewMetricName[] = [
   'call_25_skew',
@@ -75,7 +80,35 @@ export const SKEW_METRIC_NAMES: SkewMetricName[] = [
   'atm_iv',
   'expected_move_pct',
   'expected_move_vs_atr_ratio',
+  'smile_curvature',
+  'call_wing_curvature',
+  'put_wing_curvature',
+  'skew_asymmetry',
 ]
+
+// ── Phase 2 enums ─────────────────────────────────────────────────────────────
+
+export type RvAcceleration = 'expanding' | 'compressing' | 'neutral' | 'unknown'
+
+export type TrendState =
+  | 'bullish'
+  | 'bearish'
+  | 'rangebound'
+  | 'squeeze_setup'
+  | 'parabolic'
+  | 'unknown'
+
+export type SignalStatus = 'new' | 'strengthening' | 'weakening' | 'resolved'
+
+export type CandidateStructure =
+  | 'bull_call_debit_spread'
+  | 'bear_put_debit_spread'
+  | 'call_credit_spread'
+  | 'put_credit_spread'
+
+export type ExclusionSource = 'manual' | 'auto'
+
+export type FeedbackClassification = 'true_positive' | 'false_positive' | 'ambiguous'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -133,6 +166,15 @@ export interface SkewSurfaceSnapshot {
 
   avg_bid_ask_spread_pct:   number | null
   liquidity_score:          number | null
+
+  // Surface distortion (Phase 2)
+  smile_curvature:          number | null
+  call_wing_curvature:      number | null
+  put_wing_curvature:       number | null
+  skew_asymmetry:           number | null
+
+  excluded_from_benchmark:  boolean
+  exclusion_reason:         string | null
 
   data_quality:             DataQuality
   quality_notes:            string | null
@@ -225,7 +267,132 @@ export interface SkewScannerSignal {
 
   decision_reason:          string | null
   explanation_text:         string | null
+
+  // Surface distortion (Phase 2)
+  smile_curvature:          number | null
+  call_wing_curvature:      number | null
+  put_wing_curvature:       number | null
+  skew_asymmetry:           number | null
+
+  // Realized vol regime
+  rv10:                     number | null
+  rv20:                     number | null
+  rv30:                     number | null
+  iv30_rv20_ratio:          number | null
+  rv_acceleration:          RvAcceleration | null
+
+  // Trend state
+  trend_state:              TrendState | null
+
+  // Expected move breach analytics
+  breached_1x_expected_move:        boolean
+  breached_1_5x_expected_move:      boolean
+  breached_2x_expected_move:        boolean
+  expected_move_distance_remaining: number | null
+
+  // Intraday expansion vs prior snapshot
+  iv_expansion_pct:         number | null
+  skew_expansion_pct:       number | null
+  term_structure_change:    number | null
+
+  // Composite quality + lifecycle
+  structure_quality_score:  number | null
+  excluded_reason:          string | null
+  signal_status:            SignalStatus
+
   created_at:               string
+}
+
+// ── Spread candidate + exclusion + context + feedback rows ────────────────────
+
+export interface SkewSpreadCandidate {
+  id:                       string
+  signal_id:                string
+  rank_in_signal:           number
+  structure:                CandidateStructure
+
+  long_strike:              number
+  short_strike:             number
+  width:                    number
+
+  long_leg_iv:              number | null
+  short_leg_iv:             number | null
+  iv_differential:          number | null
+
+  long_leg_delta:           number | null
+  short_leg_delta:          number | null
+  net_delta:                number | null
+
+  long_leg_vega:            number | null
+  short_leg_vega:           number | null
+  net_vega:                 number | null
+
+  debit_credit:             number | null   // + debit, − credit
+  pop_estimate:             number | null   // 0..1
+
+  spread_efficiency_score:  number | null
+  skew_efficiency_score:    number | null
+  liquidity_quality:        number | null
+  structure_quality_score:  number | null
+
+  meta:                     Record<string, unknown> | null
+  created_at:               string
+}
+
+export interface SkewScannerExclusion {
+  id:          string
+  symbol:      string
+  reason:      string
+  source:      ExclusionSource
+  expires_at:  string | null
+  notes:       string | null
+  created_at:  string
+}
+
+export interface SkewMarketContext {
+  run_id:               string
+  vix_level:            number | null
+  vix_percentile:       number | null
+  market_trend_state:   string | null
+  market_gamma_regime:  string | null
+  captured_at:          string
+}
+
+export interface SkewDailyBar {
+  symbol:     string
+  trade_date: string  // YYYY-MM-DD
+  open:       number
+  high:       number
+  low:        number
+  close:      number
+  volume:     number | null
+  source:     string
+}
+
+export interface SkewSignalFeedback {
+  id:             string
+  signal_id:      string
+  reviewer:       string | null
+  classification: FeedbackClassification
+  notes:          string | null
+  reviewed_at:    string | null
+  created_at:     string
+}
+
+export interface StructureOutcome {
+  id:            string
+  signal_id:     string
+  candidate_id:  string | null
+  entered_at:    string | null
+  exited_at:     string | null
+  entry_price:   number | null
+  exit_price:    number | null
+  pnl:           number | null
+  max_favorable: number | null
+  max_adverse:   number | null
+  status:        'open' | 'closed' | 'expired' | 'cancelled' | null
+  notes:         string | null
+  created_at:    string
 }
 
 // ── Input-side types for the calculation utilities ────────────────────────────

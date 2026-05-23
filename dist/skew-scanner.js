@@ -16,6 +16,10 @@ exports.SKEW_METRIC_NAMES = [
     'atm_iv',
     'expected_move_pct',
     'expected_move_vs_atr_ratio',
+    'smile_curvature',
+    'call_wing_curvature',
+    'put_wing_curvature',
+    'skew_asymmetry',
 ];
 // ── Constants ─────────────────────────────────────────────────────────────────
 // Minimum sample size before Z-scores are emitted by the skew scanner.

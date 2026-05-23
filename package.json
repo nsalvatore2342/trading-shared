@@ -1,6 +1,6 @@
 {
   "name": "@nsalvatore2342/trading-shared",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Shared types and Silexx parse utilities for trading apps",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

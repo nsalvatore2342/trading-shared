@@ -53,6 +53,19 @@ export type {
   ChainSurfaceInput,
   BenchmarkRow,
   BenchmarkLookup,
+  // Phase 2 additions
+  RvAcceleration,
+  TrendState,
+  SignalStatus,
+  CandidateStructure,
+  ExclusionSource,
+  FeedbackClassification,
+  SkewSpreadCandidate,
+  SkewScannerExclusion,
+  SkewMarketContext,
+  SkewDailyBar,
+  SkewSignalFeedback,
+  StructureOutcome,
 } from './skew-scanner'
 export {
   DTE_BUCKETS,

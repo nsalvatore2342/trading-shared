@@ -14,8 +14,14 @@ export interface WarningFlag {
     severity: WarningFlagSeverity;
     value?: number | string | null;
 }
-export type SkewMetricName = 'call_25_skew' | 'put_25_skew' | 'call_10_25_slope' | 'put_10_25_slope' | 'put_call_skew_spread' | 'term_structure_slope' | 'atm_iv' | 'expected_move_pct' | 'expected_move_vs_atr_ratio';
+export type SkewMetricName = 'call_25_skew' | 'put_25_skew' | 'call_10_25_slope' | 'put_10_25_slope' | 'put_call_skew_spread' | 'term_structure_slope' | 'atm_iv' | 'expected_move_pct' | 'expected_move_vs_atr_ratio' | 'smile_curvature' | 'call_wing_curvature' | 'put_wing_curvature' | 'skew_asymmetry';
 export declare const SKEW_METRIC_NAMES: SkewMetricName[];
+export type RvAcceleration = 'expanding' | 'compressing' | 'neutral' | 'unknown';
+export type TrendState = 'bullish' | 'bearish' | 'rangebound' | 'squeeze_setup' | 'parabolic' | 'unknown';
+export type SignalStatus = 'new' | 'strengthening' | 'weakening' | 'resolved';
+export type CandidateStructure = 'bull_call_debit_spread' | 'bear_put_debit_spread' | 'call_credit_spread' | 'put_credit_spread';
+export type ExclusionSource = 'manual' | 'auto';
+export type FeedbackClassification = 'true_positive' | 'false_positive' | 'ambiguous';
 export declare const SKEW_MIN_SAMPLE_SIZE = 30;
 export declare const INFLATION_Z_THRESHOLD = 2;
 export declare const INFLATION_PERCENTILE_THRESHOLD = 0.9;
@@ -56,6 +62,12 @@ export interface SkewSurfaceSnapshot {
     put_oi: number | null;
     avg_bid_ask_spread_pct: number | null;
     liquidity_score: number | null;
+    smile_curvature: number | null;
+    call_wing_curvature: number | null;
+    put_wing_curvature: number | null;
+    skew_asymmetry: number | null;
+    excluded_from_benchmark: boolean;
+    exclusion_reason: string | null;
     data_quality: DataQuality;
     quality_notes: string | null;
     meta: Record<string, unknown> | null;
@@ -133,6 +145,103 @@ export interface SkewScannerSignal {
     has_poor_liquidity: boolean;
     decision_reason: string | null;
     explanation_text: string | null;
+    smile_curvature: number | null;
+    call_wing_curvature: number | null;
+    put_wing_curvature: number | null;
+    skew_asymmetry: number | null;
+    rv10: number | null;
+    rv20: number | null;
+    rv30: number | null;
+    iv30_rv20_ratio: number | null;
+    rv_acceleration: RvAcceleration | null;
+    trend_state: TrendState | null;
+    breached_1x_expected_move: boolean;
+    breached_1_5x_expected_move: boolean;
+    breached_2x_expected_move: boolean;
+    expected_move_distance_remaining: number | null;
+    iv_expansion_pct: number | null;
+    skew_expansion_pct: number | null;
+    term_structure_change: number | null;
+    structure_quality_score: number | null;
+    excluded_reason: string | null;
+    signal_status: SignalStatus;
+    created_at: string;
+}
+export interface SkewSpreadCandidate {
+    id: string;
+    signal_id: string;
+    rank_in_signal: number;
+    structure: CandidateStructure;
+    long_strike: number;
+    short_strike: number;
+    width: number;
+    long_leg_iv: number | null;
+    short_leg_iv: number | null;
+    iv_differential: number | null;
+    long_leg_delta: number | null;
+    short_leg_delta: number | null;
+    net_delta: number | null;
+    long_leg_vega: number | null;
+    short_leg_vega: number | null;
+    net_vega: number | null;
+    debit_credit: number | null;
+    pop_estimate: number | null;
+    spread_efficiency_score: number | null;
+    skew_efficiency_score: number | null;
+    liquidity_quality: number | null;
+    structure_quality_score: number | null;
+    meta: Record<string, unknown> | null;
+    created_at: string;
+}
+export interface SkewScannerExclusion {
+    id: string;
+    symbol: string;
+    reason: string;
+    source: ExclusionSource;
+    expires_at: string | null;
+    notes: string | null;
+    created_at: string;
+}
+export interface SkewMarketContext {
+    run_id: string;
+    vix_level: number | null;
+    vix_percentile: number | null;
+    market_trend_state: string | null;
+    market_gamma_regime: string | null;
+    captured_at: string;
+}
+export interface SkewDailyBar {
+    symbol: string;
+    trade_date: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number | null;
+    source: string;
+}
+export interface SkewSignalFeedback {
+    id: string;
+    signal_id: string;
+    reviewer: string | null;
+    classification: FeedbackClassification;
+    notes: string | null;
+    reviewed_at: string | null;
+    created_at: string;
+}
+export interface StructureOutcome {
+    id: string;
+    signal_id: string;
+    candidate_id: string | null;
+    entered_at: string | null;
+    exited_at: string | null;
+    entry_price: number | null;
+    exit_price: number | null;
+    pnl: number | null;
+    max_favorable: number | null;
+    max_adverse: number | null;
+    status: 'open' | 'closed' | 'expired' | 'cancelled' | null;
+    notes: string | null;
     created_at: string;
 }
 export interface ChainSurfaceInput {
