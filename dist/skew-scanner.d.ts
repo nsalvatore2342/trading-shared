@@ -22,6 +22,19 @@ export type SignalStatus = 'new' | 'strengthening' | 'weakening' | 'resolved';
 export type CandidateStructure = 'bull_call_debit_spread' | 'bear_put_debit_spread' | 'call_credit_spread' | 'put_credit_spread';
 export type ExclusionSource = 'manual' | 'auto';
 export type FeedbackClassification = 'true_positive' | 'false_positive' | 'ambiguous';
+export type InstrumentType = 'equity' | 'index' | 'future' | 'crypto' | 'vol_product';
+export type VolatilityRegime = string;
+export type SkewRegime = string;
+export type MarketStateCluster = string;
+export interface EdgeComponents {
+    spread_efficiency?: number;
+    skew_efficiency?: number;
+    liquidity_quality?: number;
+    trend_alignment?: number;
+    expected_move_position?: number;
+    rv_regime_fit?: number;
+    [key: string]: number | undefined;
+}
 export declare const SKEW_MIN_SAMPLE_SIZE = 30;
 export declare const INFLATION_Z_THRESHOLD = 2;
 export declare const INFLATION_PERCENTILE_THRESHOLD = 0.9;
@@ -165,6 +178,29 @@ export interface SkewScannerSignal {
     structure_quality_score: number | null;
     excluded_reason: string | null;
     signal_status: SignalStatus;
+    recommended_structure: PreferredStructure | null;
+    best_risk_reward_structure: CandidateStructure | null;
+    directional_confidence: number | null;
+    structure_confidence: number | null;
+    data_quality_confidence: number | null;
+    continuation_probability: number | null;
+    exhaustion_probability: number | null;
+    call_skew_change_1d: number | null;
+    put_skew_change_1d: number | null;
+    call_skew_change_intraday: number | null;
+    put_skew_change_intraday: number | null;
+    gamma_flip_distance: number | null;
+    distance_to_call_wall: number | null;
+    distance_to_put_wall: number | null;
+    dealer_positioning_bias: string | null;
+    surface_integrity_score: number | null;
+    benchmark_age_hours: number | null;
+    stale_surface_flag: boolean;
+    stale_benchmark_flag: boolean;
+    volatility_regime: VolatilityRegime | null;
+    skew_regime: SkewRegime | null;
+    market_state_cluster: MarketStateCluster | null;
+    instrument_type: InstrumentType;
     created_at: string;
 }
 export interface SkewSpreadCandidate {
@@ -191,6 +227,7 @@ export interface SkewSpreadCandidate {
     liquidity_quality: number | null;
     structure_quality_score: number | null;
     meta: Record<string, unknown> | null;
+    edge_components: EdgeComponents;
     created_at: string;
 }
 export interface SkewScannerExclusion {
@@ -242,7 +279,18 @@ export interface StructureOutcome {
     max_adverse: number | null;
     status: 'open' | 'closed' | 'expired' | 'cancelled' | null;
     notes: string | null;
+    max_favorable_excursion: number | null;
+    max_adverse_excursion: number | null;
+    realized_pnl: number | null;
+    realized_iv_change: number | null;
+    realized_move_vs_expected: number | null;
     created_at: string;
+}
+export interface SkewSignalEnriched extends SkewScannerSignal {
+    vix_level: number | null;
+    vix_percentile: number | null;
+    market_trend_state: string | null;
+    market_gamma_regime: string | null;
 }
 export interface ChainSurfaceInput {
     symbol: string;

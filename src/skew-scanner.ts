@@ -110,6 +110,27 @@ export type ExclusionSource = 'manual' | 'auto'
 
 export type FeedbackClassification = 'true_positive' | 'false_positive' | 'ambiguous'
 
+// ── Phase 3 enums ─────────────────────────────────────────────────────────────
+
+export type InstrumentType = 'equity' | 'index' | 'future' | 'crypto' | 'vol_product'
+
+// Regime clustering — free text in Phase 3 (will tighten once clusters stabilise)
+export type VolatilityRegime    = string
+export type SkewRegime          = string
+export type MarketStateCluster  = string
+
+// Edge component breakdown for a candidate's structure_quality_score
+export interface EdgeComponents {
+  spread_efficiency?:      number
+  skew_efficiency?:        number
+  liquidity_quality?:      number
+  trend_alignment?:        number
+  expected_move_position?: number
+  rv_regime_fit?:          number
+  // Negative entries represent penalties
+  [key: string]: number | undefined
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 // Minimum sample size before Z-scores are emitted by the skew scanner.
@@ -300,6 +321,47 @@ export interface SkewScannerSignal {
   excluded_reason:          string | null
   signal_status:            SignalStatus
 
+  // Phase 3 — decoupled directional vs risk/reward recommendations
+  recommended_structure:      PreferredStructure | null
+  best_risk_reward_structure: CandidateStructure | null
+
+  // Three independent confidences (0..100)
+  directional_confidence:   number | null
+  structure_confidence:     number | null
+  data_quality_confidence:  number | null
+
+  // Continuation vs exhaustion (0..1)
+  continuation_probability: number | null
+  exhaustion_probability:   number | null
+
+  // Skew velocity (IV-decimal deltas)
+  call_skew_change_1d:        number | null
+  put_skew_change_1d:         number | null
+  call_skew_change_intraday:  number | null
+  put_skew_change_intraday:   number | null
+
+  // Dealer positioning placeholders
+  gamma_flip_distance:        number | null
+  distance_to_call_wall:      number | null
+  distance_to_put_wall:       number | null
+  dealer_positioning_bias:    string | null
+
+  // Surface integrity
+  surface_integrity_score:    number | null
+
+  // Drift monitoring
+  benchmark_age_hours:        number | null
+  stale_surface_flag:         boolean
+  stale_benchmark_flag:       boolean
+
+  // Regime clustering placeholders
+  volatility_regime:          VolatilityRegime | null
+  skew_regime:                SkewRegime | null
+  market_state_cluster:       MarketStateCluster | null
+
+  // Multi-underlying support
+  instrument_type:            InstrumentType
+
   created_at:               string
 }
 
@@ -336,6 +398,8 @@ export interface SkewSpreadCandidate {
   structure_quality_score:  number | null
 
   meta:                     Record<string, unknown> | null
+  // Phase 3 — explainability
+  edge_components:          EdgeComponents
   created_at:               string
 }
 
@@ -392,7 +456,23 @@ export interface StructureOutcome {
   max_adverse:   number | null
   status:        'open' | 'closed' | 'expired' | 'cancelled' | null
   notes:         string | null
+
+  // Phase 3 — canonical backtest fields (forward-looking column names)
+  max_favorable_excursion:   number | null
+  max_adverse_excursion:     number | null
+  realized_pnl:              number | null
+  realized_iv_change:        number | null
+  realized_move_vs_expected: number | null
+
   created_at:    string
+}
+
+// Helper: enriched signal returned by the SQL view skew_signals_enriched
+export interface SkewSignalEnriched extends SkewScannerSignal {
+  vix_level:           number | null
+  vix_percentile:      number | null
+  market_trend_state:  string | null
+  market_gamma_regime: string | null
 }
 
 // ── Input-side types for the calculation utilities ────────────────────────────

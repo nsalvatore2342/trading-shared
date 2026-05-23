@@ -66,6 +66,13 @@ export type {
   SkewDailyBar,
   SkewSignalFeedback,
   StructureOutcome,
+  // Phase 3 additions
+  InstrumentType,
+  VolatilityRegime,
+  SkewRegime,
+  MarketStateCluster,
+  EdgeComponents,
+  SkewSignalEnriched,
 } from './skew-scanner'
 export {
   DTE_BUCKETS,
