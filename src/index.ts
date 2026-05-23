@@ -31,3 +31,36 @@ export type { ParseResult, ParseSuccess, ParseFailure } from './parse'
 // T-1 Double Calendar Screener
 export type { T1ScreenerSnapshot, ZoneKey, ZoneColor, ZoneStat, ZoneInfo } from './t1-screener'
 export { ZONES, BAND_ORDER, TENT_THRESHOLD, getSkewZone, T1_TOOLTIPS } from './t1-screener'
+
+// Skew Overextension Scanner
+export type {
+  ScannerSource,
+  ScannerStatus,
+  DataQuality,
+  DteBucket,
+  ExtensionRegime,
+  Direction,
+  Side,
+  PreferredStructure,
+  WarningFlagSeverity,
+  WarningFlagName,
+  WarningFlag,
+  SkewMetricName,
+  SkewScannerRun,
+  SkewSurfaceSnapshot,
+  SkewHistoricalBenchmark,
+  SkewScannerSignal,
+  ChainSurfaceInput,
+  BenchmarkRow,
+  BenchmarkLookup,
+} from './skew-scanner'
+export {
+  DTE_BUCKETS,
+  SKEW_METRIC_NAMES,
+  SKEW_MIN_SAMPLE_SIZE,
+  INFLATION_Z_THRESHOLD,
+  INFLATION_PERCENTILE_THRESHOLD,
+  EXTENSION_MILD_LO,
+  EXTENSION_EXTENDED_LO,
+  EXTENSION_EXTREME_LO,
+} from './skew-scanner'
