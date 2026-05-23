@@ -119,6 +119,21 @@ export type VolatilityRegime    = string
 export type SkewRegime          = string
 export type MarketStateCluster  = string
 
+// ── Phase 4 enums ─────────────────────────────────────────────────────────────
+
+export type RunRequestStatus = 'pending' | 'claimed' | 'running' | 'done' | 'failed' | 'cancelled'
+
+export type DaemonStatus = 'idle' | 'scanning' | 'draining' | 'degraded'
+
+export type OutcomeEvaluationWindow = '1d' | '3d' | '5d' | 'expiration'
+
+// Positive/negative contributors: per-factor reasoning for a signal.
+export interface SignalContributor {
+  factor:        string                       // 'call_skew_z' | 'trend_alignment' | …
+  contribution:  number                       // 0..100 (positive) or negative (penalty)
+  note?:         string                       // human-readable explanation
+}
+
 // Edge component breakdown for a candidate's structure_quality_score
 export interface EdgeComponents {
   spread_efficiency?:      number
@@ -362,6 +377,11 @@ export interface SkewScannerSignal {
   // Multi-underlying support
   instrument_type:            InstrumentType
 
+  // Phase 4 — replay + explainability
+  is_replay:                  boolean
+  positive_contributors:      SignalContributor[]
+  negative_contributors:      SignalContributor[]
+
   created_at:               string
 }
 
@@ -464,7 +484,59 @@ export interface StructureOutcome {
   realized_iv_change:        number | null
   realized_move_vs_expected: number | null
 
+  // Phase 4 — configurable evaluation windows
+  evaluation_window:    OutcomeEvaluationWindow | null
+  evaluation_end_at:    string | null
+  underlying_at_exit:   number | null
+  atm_iv_at_exit:       number | null
+
   created_at:    string
+}
+
+// ── Phase 4 row shapes ────────────────────────────────────────────────────────
+
+export interface SkewRunRequest {
+  id:             string
+  source:         string
+  symbols:        string[]
+  notes:          string | null
+  status:         RunRequestStatus
+  claimed_by:     string | null
+  claimed_at:     string | null
+  run_id:         string | null
+  error_message:  string | null
+  created_at:     string
+  updated_at:     string
+}
+
+export interface SkewDaemonHeartbeat {
+  id:                string
+  daemon_id:         string
+  reported_at:       string
+  status:            DaemonStatus
+  current_run_id:    string | null
+  pending_requests:  number
+  memory_mb:         number | null
+  notes:             string | null
+}
+
+export interface SkewScannerHealth {
+  id:                       string
+  run_id:                   string
+  daemon_id:                string | null
+  symbols_per_minute:       number | null
+  avg_chain_latency_ms:     number | null
+  p95_chain_latency_ms:     number | null
+  failed_symbols:           number
+  skipped_symbols:          number
+  api_cooldowns:            number
+  benchmark_age_hours:      number | null
+  benchmark_cache_hits:     number
+  benchmark_cache_misses:   number
+  memory_peak_mb:           number | null
+  notes:                    string | null
+  errors_jsonb:             Array<{ symbol: string; phase: string; error: string }>
+  created_at:               string
 }
 
 // Helper: enriched signal returned by the SQL view skew_signals_enriched

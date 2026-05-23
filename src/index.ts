@@ -73,6 +73,14 @@ export type {
   MarketStateCluster,
   EdgeComponents,
   SkewSignalEnriched,
+  // Phase 4 additions
+  RunRequestStatus,
+  DaemonStatus,
+  OutcomeEvaluationWindow,
+  SignalContributor,
+  SkewRunRequest,
+  SkewDaemonHeartbeat,
+  SkewScannerHealth,
 } from './skew-scanner'
 export {
   DTE_BUCKETS,
